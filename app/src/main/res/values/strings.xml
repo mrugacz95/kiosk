@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">Kiosk</string>
+    <string name="not_device_owner">You are not the owner</string>
+    <string name="device_owner">You are admin!</string>
 </resources>
