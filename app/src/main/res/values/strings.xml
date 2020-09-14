@@ -1,7 +1,8 @@
 <resources>
-    <string name="app_name">Kiosk</string>
+    <string name="app_name">Kiosk demo</string>
     <string name="not_device_owner">You are not the owner</string>
     <string name="device_owner">You are admin!</string>
     <string name="stop_lock_task">Stop lock task</string>
     <string name="start_lock_task">Start lock task</string>
+    <string name="install">Install application</string>
 </resources>

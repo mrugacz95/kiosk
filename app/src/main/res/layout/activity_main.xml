@@ -6,6 +6,16 @@
     android:layout_height="match_parent"
     tools:context="pl.snowdog.kiosk.MainActivity">
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="@dimen/text_margin"
+        android:text="@string/app_name"
+        android:textSize="@dimen/title"
+        app:layout_constraintBottom_toTopOf="@id/btStartLockTask"
+        app:layout_constraintEnd_toEndOf="@id/btStopLockTask"
+        app:layout_constraintStart_toStartOf="@id/btStartLockTask" />
+
     <Button
         android:id="@+id/btStartLockTask"
         android:layout_width="wrap_content"
@@ -25,4 +35,14 @@
         app:layout_constraintLeft_toRightOf="@id/btStartLockTask"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <Button
+        android:id="@+id/btInstallApp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/buttons_margin"
+        android:text="@string/install"
+        app:layout_constraintEnd_toEndOf="@id/btStopLockTask"
+        app:layout_constraintStart_toStartOf="@id/btStartLockTask"
+        app:layout_constraintTop_toBottomOf="@id/btStartLockTask" />
 </android.support.constraint.ConstraintLayout>

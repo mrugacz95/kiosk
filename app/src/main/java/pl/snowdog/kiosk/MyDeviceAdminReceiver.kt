@@ -15,12 +15,12 @@ class MyDeviceAdminReceiver : DeviceAdminReceiver() {
         private val TAG = MyDeviceAdminReceiver::class.java.simpleName
     }
 
-    override fun onLockTaskModeEntering(context: Context?, intent: Intent?, pkg: String?) {
+    override fun onLockTaskModeEntering(context: Context, intent: Intent, pkg: String) {
         super.onLockTaskModeEntering(context, intent, pkg)
         Log.d(TAG, "onLockTaskModeEntering")
     }
 
-    override fun onLockTaskModeExiting(context: Context?, intent: Intent?) {
+    override fun onLockTaskModeExiting(context: Context, intent: Intent) {
         super.onLockTaskModeExiting(context, intent)
         Log.d(TAG, "onLockTaskModeExiting")
     }

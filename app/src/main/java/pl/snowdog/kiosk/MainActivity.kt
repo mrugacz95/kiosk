@@ -1,11 +1,11 @@
 package pl.snowdog.kiosk
 
+import android.app.PendingIntent
 import android.app.admin.DevicePolicyManager
 import android.app.admin.SystemUpdatePolicy
-import android.content.ComponentName
-import android.content.Context
-import android.content.Intent
-import android.content.IntentFilter
+import android.content.*
+import android.content.pm.PackageInstaller
+import android.content.pm.PackageInstaller.SessionParams
 import android.os.BatteryManager
 import android.os.Bundle
 import android.os.UserManager
@@ -32,10 +32,11 @@ class MainActivity : AppCompatActivity() {
         mAdminComponentName = MyDeviceAdminReceiver.getComponentName(this)
         mDevicePolicyManager = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
 
-        var isAdmin = false
-        if (mDevicePolicyManager.isDeviceOwnerApp(packageName)) {
+        mDevicePolicyManager.removeActiveAdmin(mAdminComponentName)
+
+        val isAdmin = isAdmin()
+        if (isAdmin) {
             Toast.makeText(applicationContext, R.string.device_owner, Toast.LENGTH_SHORT).show()
-            isAdmin = true
         } else {
             Toast.makeText(applicationContext, R.string.not_device_owner, Toast.LENGTH_SHORT).show()
         }
@@ -43,7 +44,6 @@ class MainActivity : AppCompatActivity() {
             setKioskPolicies(true, isAdmin)
         }
         btStopLockTask.setOnClickListener {
-
             setKioskPolicies(false, isAdmin)
             val intent = Intent(applicationContext, MainActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
@@ -51,9 +51,12 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(LOCK_ACTIVITY_KEY, false)
             startActivity(intent)
         }
-
-
+        btInstallApp.setOnClickListener {
+            installApp()
+        }
     }
+
+    private fun isAdmin() = mDevicePolicyManager.isDeviceOwnerApp(packageName)
 
     private fun setKioskPolicies(enable: Boolean, isAdmin: Boolean) {
         if (isAdmin) {
@@ -74,6 +77,8 @@ class MainActivity : AppCompatActivity() {
         setUserRestriction(UserManager.DISALLOW_ADD_USER, disallow)
         setUserRestriction(UserManager.DISALLOW_MOUNT_PHYSICAL_MEDIA, disallow)
         setUserRestriction(UserManager.DISALLOW_ADJUST_VOLUME, disallow)
+        mDevicePolicyManager.setStatusBarDisabled(mAdminComponentName, disallow)
+
     }
 
     private fun setUserRestriction(restriction: String, disallow: Boolean) = if (disallow) {
@@ -86,16 +91,17 @@ class MainActivity : AppCompatActivity() {
     private fun enableStayOnWhilePluggedIn(active: Boolean) = if (active) {
         mDevicePolicyManager.setGlobalSetting(mAdminComponentName,
                 Settings.Global.STAY_ON_WHILE_PLUGGED_IN,
-                Integer.toString(BatteryManager.BATTERY_PLUGGED_AC
+                (BatteryManager.BATTERY_PLUGGED_AC
                         or BatteryManager.BATTERY_PLUGGED_USB
-                        or BatteryManager.BATTERY_PLUGGED_WIRELESS))
+                        or BatteryManager.BATTERY_PLUGGED_WIRELESS).toString())
     } else {
         mDevicePolicyManager.setGlobalSetting(mAdminComponentName, Settings.Global.STAY_ON_WHILE_PLUGGED_IN, "0")
     }
 
     private fun setLockTask(start: Boolean, isAdmin: Boolean) {
         if (isAdmin) {
-            mDevicePolicyManager.setLockTaskPackages(mAdminComponentName, if (start) arrayOf(packageName) else arrayOf())
+            mDevicePolicyManager.setLockTaskPackages(
+                    mAdminComponentName, if (start) arrayOf(packageName) else arrayOf())
         }
         if (start) {
             startLockTask()
@@ -146,5 +152,44 @@ class MainActivity : AppCompatActivity() {
                     or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN)
             window.decorView.systemUiVisibility = flags
         }
+    }
+
+    private fun createIntentSender(context: Context?, sessionId: Int, packageName: String?): IntentSender? {
+        val intent = Intent("INSTALL_COMPLETE")
+        if (packageName != null) {
+            intent.putExtra("PACKAGE_NAME", packageName)
+        }
+        val pendingIntent = PendingIntent.getBroadcast(
+                context,
+                sessionId,
+                intent,
+                0)
+        return pendingIntent.intentSender
+    }
+
+    private fun installApp() {
+        if (!isAdmin()) {
+            Toast.makeText(this, "Not a Device Owner", Toast.LENGTH_LONG).show()
+            return
+        }
+        val raw = resources.openRawResource(R.raw.other_app)
+        val packageInstaller: PackageInstaller = packageManager.packageInstaller
+        val params = SessionParams(
+                SessionParams.MODE_FULL_INSTALL)
+        params.setAppPackageName("com.mrugas.smallapp")
+        val sessionId = packageInstaller.createSession(params)
+        val session = packageInstaller.openSession(sessionId)
+        val out = session.openWrite("SmallApp", 0, -1)
+        val buffer = ByteArray(65536)
+        var c: Int
+        while (raw.read(buffer).also { c = it } != -1) {
+            out.write(buffer, 0, c)
+        }
+        session.fsync(out)
+        out.close()
+        createIntentSender(this, sessionId, packageName)?.let { intentSender ->
+            session.commit(intentSender)
+        }
+        session.close()
     }
 }
