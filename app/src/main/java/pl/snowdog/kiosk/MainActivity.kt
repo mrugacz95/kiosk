@@ -1,25 +1,30 @@
 package pl.snowdog.kiosk
 
 import android.app.PendingIntent
+import android.app.PendingIntent.FLAG_IMMUTABLE
 import android.app.admin.DevicePolicyManager
 import android.app.admin.SystemUpdatePolicy
-import android.content.*
+import android.content.ComponentName
+import android.content.Context
+import android.content.Intent
+import android.content.IntentFilter
+import android.content.IntentSender
 import android.content.pm.PackageInstaller
 import android.content.pm.PackageInstaller.SessionParams
 import android.os.BatteryManager
 import android.os.Bundle
 import android.os.UserManager
 import android.provider.Settings
-import android.support.v7.app.AppCompatActivity
 import android.view.View
-import android.widget.Toast
-import kotlinx.android.synthetic.main.activity_main.*
-
+import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.snackbar.Snackbar
+import pl.snowdog.kiosk.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var mAdminComponentName: ComponentName
     private lateinit var mDevicePolicyManager: DevicePolicyManager
+    private lateinit var binding: ActivityMainBinding
 
     companion object {
         const val LOCK_ACTIVITY_KEY = "pl.snowdog.kiosk.MainActivity"
@@ -27,7 +32,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+        binding = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         mAdminComponentName = MyDeviceAdminReceiver.getComponentName(this)
         mDevicePolicyManager = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
@@ -36,14 +42,14 @@ class MainActivity : AppCompatActivity() {
 
         val isAdmin = isAdmin()
         if (isAdmin) {
-            Toast.makeText(applicationContext, R.string.device_owner, Toast.LENGTH_SHORT).show()
+            Snackbar.make(binding.content, R.string.device_owner, Snackbar.LENGTH_SHORT).show()
         } else {
-            Toast.makeText(applicationContext, R.string.not_device_owner, Toast.LENGTH_SHORT).show()
+            Snackbar.make(binding.content, R.string.not_device_owner, Snackbar.LENGTH_SHORT).show()
         }
-        btStartLockTask.setOnClickListener {
+        binding.btStartLockTask.setOnClickListener {
             setKioskPolicies(true, isAdmin)
         }
-        btStopLockTask.setOnClickListener {
+        binding.btStopLockTask.setOnClickListener {
             setKioskPolicies(false, isAdmin)
             val intent = Intent(applicationContext, MainActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
@@ -51,7 +57,7 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(LOCK_ACTIVITY_KEY, false)
             startActivity(intent)
         }
-        btInstallApp.setOnClickListener {
+        binding.btInstallApp.setOnClickListener {
             installApp()
         }
     }
@@ -78,7 +84,6 @@ class MainActivity : AppCompatActivity() {
         setUserRestriction(UserManager.DISALLOW_MOUNT_PHYSICAL_MEDIA, disallow)
         setUserRestriction(UserManager.DISALLOW_ADJUST_VOLUME, disallow)
         mDevicePolicyManager.setStatusBarDisabled(mAdminComponentName, disallow)
-
     }
 
     private fun setUserRestriction(restriction: String, disallow: Boolean) = if (disallow) {
@@ -89,11 +94,13 @@ class MainActivity : AppCompatActivity() {
     // endregion
 
     private fun enableStayOnWhilePluggedIn(active: Boolean) = if (active) {
-        mDevicePolicyManager.setGlobalSetting(mAdminComponentName,
-                Settings.Global.STAY_ON_WHILE_PLUGGED_IN,
-                (BatteryManager.BATTERY_PLUGGED_AC
-                        or BatteryManager.BATTERY_PLUGGED_USB
-                        or BatteryManager.BATTERY_PLUGGED_WIRELESS).toString())
+        mDevicePolicyManager.setGlobalSetting(
+            mAdminComponentName,
+            Settings.Global.STAY_ON_WHILE_PLUGGED_IN,
+            (BatteryManager.BATTERY_PLUGGED_AC
+                    or BatteryManager.BATTERY_PLUGGED_USB
+                    or BatteryManager.BATTERY_PLUGGED_WIRELESS).toString()
+        )
     } else {
         mDevicePolicyManager.setGlobalSetting(mAdminComponentName, Settings.Global.STAY_ON_WHILE_PLUGGED_IN, "0")
     }
@@ -101,7 +108,8 @@ class MainActivity : AppCompatActivity() {
     private fun setLockTask(start: Boolean, isAdmin: Boolean) {
         if (isAdmin) {
             mDevicePolicyManager.setLockTaskPackages(
-                    mAdminComponentName, if (start) arrayOf(packageName) else arrayOf())
+                mAdminComponentName, if (start) arrayOf(packageName) else arrayOf()
+            )
         }
         if (start) {
             startLockTask()
@@ -112,8 +120,10 @@ class MainActivity : AppCompatActivity() {
 
     private fun setUpdatePolicy(enable: Boolean) {
         if (enable) {
-            mDevicePolicyManager.setSystemUpdatePolicy(mAdminComponentName,
-                    SystemUpdatePolicy.createWindowedInstallPolicy(60, 120))
+            mDevicePolicyManager.setSystemUpdatePolicy(
+                mAdminComponentName,
+                SystemUpdatePolicy.createWindowedInstallPolicy(60, 120)
+            )
         } else {
             mDevicePolicyManager.setSystemUpdatePolicy(mAdminComponentName, null)
         }
@@ -126,10 +136,12 @@ class MainActivity : AppCompatActivity() {
                 addCategory(Intent.CATEGORY_DEFAULT)
             }
             mDevicePolicyManager.addPersistentPreferredActivity(
-                    mAdminComponentName, intentFilter, ComponentName(packageName, MainActivity::class.java.name))
+                mAdminComponentName, intentFilter, ComponentName(packageName, MainActivity::class.java.name)
+            )
         } else {
             mDevicePolicyManager.clearPackagePersistentPreferredActivities(
-                    mAdminComponentName, packageName)
+                mAdminComponentName, packageName
+            )
         }
     }
 
@@ -160,22 +172,22 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra("PACKAGE_NAME", packageName)
         }
         val pendingIntent = PendingIntent.getBroadcast(
-                context,
-                sessionId,
-                intent,
-                0)
+            context,
+            sessionId,
+            intent,
+            FLAG_IMMUTABLE
+        )
         return pendingIntent.intentSender
     }
 
     private fun installApp() {
         if (!isAdmin()) {
-            Toast.makeText(this, "Not a Device Owner", Toast.LENGTH_LONG).show()
+            Snackbar.make(binding.content, R.string.not_device_owner, Snackbar.LENGTH_LONG).show()
             return
         }
         val raw = resources.openRawResource(R.raw.other_app)
         val packageInstaller: PackageInstaller = packageManager.packageInstaller
-        val params = SessionParams(
-                SessionParams.MODE_FULL_INSTALL)
+        val params = SessionParams(SessionParams.MODE_FULL_INSTALL)
         params.setAppPackageName("com.mrugas.smallapp")
         val sessionId = packageInstaller.createSession(params)
         val session = packageInstaller.openSession(sessionId)
