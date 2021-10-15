@@ -1,13 +1,12 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 
 android {
     compileSdkVersion rootProject.ext.compileSdkVersion
     defaultConfig {
         applicationId "pl.snowdog.kiosk"
         minSdkVersion 23
-        targetSdkVersion 29
+        targetSdkVersion 31
         versionCode 3
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -18,11 +17,15 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    buildFeatures {
+        viewBinding true
+    }
 }
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation"org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
-    implementation "com.android.support:appcompat-v7:$rootProject.ext.supportLibVersion"
-    implementation 'com.android.support.constraint:constraint-layout:2.0.1'
+    implementation "androidx.appcompat:appcompat:$rootProject.ext.supportLibVersion"
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.1'
+    implementation 'com.google.android.material:material:1.4.0'
 }
