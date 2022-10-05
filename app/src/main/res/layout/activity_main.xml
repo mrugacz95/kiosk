@@ -6,7 +6,7 @@
     android:id="@+id/content"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="pl.snowdog.kiosk.MainActivity">
+    tools:context="pl.mrugacz95.kiosk.MainActivity">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
