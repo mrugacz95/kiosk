@@ -1,4 +1,4 @@
-package pl.snowdog.kiosk
+package pl.mrugacz95.kiosk
 
 import android.app.PendingIntent
 import android.app.PendingIntent.FLAG_IMMUTABLE
@@ -18,7 +18,7 @@ import android.provider.Settings
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
-import pl.snowdog.kiosk.databinding.ActivityMainBinding
+import pl.mrugacz95.kiosk.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
 
@@ -27,7 +27,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
 
     companion object {
-        const val LOCK_ACTIVITY_KEY = "pl.snowdog.kiosk.MainActivity"
+        const val LOCK_ACTIVITY_KEY = "pl.mrugacz95.kiosk.MainActivity"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -149,6 +149,7 @@ class MainActivity : AppCompatActivity() {
         mDevicePolicyManager.setKeyguardDisabled(mAdminComponentName, !enable)
     }
 
+    @Suppress("DEPRECATION")
     private fun setImmersiveMode(enable: Boolean) {
         if (enable) {
             val flags = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
@@ -166,7 +167,7 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun createIntentSender(context: Context?, sessionId: Int, packageName: String?): IntentSender? {
+    private fun createIntentSender(context: Context?, sessionId: Int, packageName: String?): IntentSender {
         val intent = Intent("INSTALL_COMPLETE")
         if (packageName != null) {
             intent.putExtra("PACKAGE_NAME", packageName)
@@ -199,7 +200,7 @@ class MainActivity : AppCompatActivity() {
         }
         session.fsync(out)
         out.close()
-        createIntentSender(this, sessionId, packageName)?.let { intentSender ->
+        createIntentSender(this, sessionId, packageName).let { intentSender ->
             session.commit(intentSender)
         }
         session.close()

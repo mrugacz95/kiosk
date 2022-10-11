@@ -13,7 +13,7 @@ $ adb install path/to/kiosk.apk
 ```
 4. Set device owner
 ```bash
-$ adb shell dpm set-device-owner pl.snowdog.kiosk/.MyDeviceAdminReceiver
+$ adb shell dpm set-device-owner pl.mrugacz95.kiosk/.MyDeviceAdminReceiver
 ```
 
 ### Screenshots

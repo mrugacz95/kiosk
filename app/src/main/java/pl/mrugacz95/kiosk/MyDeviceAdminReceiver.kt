@@ -1,4 +1,4 @@
-package pl.snowdog.kiosk
+package pl.mrugacz95.kiosk
 
 import android.app.admin.DeviceAdminReceiver
 import android.content.ComponentName
