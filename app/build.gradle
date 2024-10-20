@@ -2,14 +2,12 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 
 android {
-    defaultConfig {
-        compileSdk 34
-        buildToolsVersion = "34.0.0"
-    }
+    buildToolsVersion = rootProject.ext.buildToolsVersion
     defaultConfig {
         applicationId "pl.mrugacz95.kiosk"
         minSdkVersion 23
-        targetSdkVersion 34
+        targetSdkVersion rootProject.ext.buildToolsVersion
+        compileSdk rootProject.ext.buildToolsVersion
         versionCode 3
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
@@ -38,5 +36,5 @@ dependencies {
     implementation"org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     implementation "androidx.appcompat:appcompat:$rootProject.ext.supportLibVersion"
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    implementation 'com.google.android.material:material:1.10.0'
+    implementation 'com.google.android.material:material:1.12.0'
 }
